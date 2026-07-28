@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -54,16 +57,37 @@ test("MCP protocol exposes only the four intended Discord tools", async () => {
 });
 
 test("stdio entrypoint starts and completes an MCP handshake", async () => {
+  const tempDirectory = await mkdtemp(join(tmpdir(), "gy-discord-mcp-"));
+  const envFile = join(tempDirectory, ".env.test");
+  await writeFile(
+    envFile,
+    [
+      "WORK_CHANNEL_ID=123456789012345678",
+      "CHAT_CHANNEL_ID=123456789012345679",
+      "CLAUDE_BOT_TOKEN=dummy-claude",
+      "CODEX_BOT_TOKEN=dummy-codex",
+      "GEMINI_BOT_TOKEN=dummy-gemini"
+    ].join("\n"),
+    "utf8"
+  );
   const client = new Client({ name: "gy-discord-stdio-test", version: "1.0.0" });
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: ["mcp/discord-mcp.mjs"],
-    cwd: process.cwd()
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      DISCORD_ENV_FILE: envFile
+    }
   });
-  await client.connect(transport);
-  const result = await client.listTools();
-  assert.equal(result.tools.length, 4);
-  await client.close();
+  try {
+    await client.connect(transport);
+    const result = await client.listTools();
+    assert.equal(result.tools.length, 4);
+  } finally {
+    await client.close();
+    await rm(tempDirectory, { recursive: true, force: true });
+  }
 });
 
 test("MCP rejects channels outside the configured allowlist before network access", async () => {
