@@ -4,7 +4,7 @@
 
 Claude Code를 Discord의 오케스트레이터로 사용하고, Claude·Codex·Gemini 워커가 각자의 봇 이름으로 작업 진행 상황을 게시하도록 돕는 운영 템플릿입니다.
 
-현재 버전: `v1.0.1`
+현재 버전: `v1.1.0`
 
 ## 주요 기능
 
@@ -14,11 +14,14 @@ Claude Code를 Discord의 오케스트레이터로 사용하고, Claude·Codex·
 - 태스크, 워커 지시서, 결과, 운영 로그 템플릿 제공
 - macOS 로그인 시 Claude Code 오케스트레이터 자동 실행
 - 실제 Discord 요청 없이 확인할 수 있는 `DRY_RUN` 모드
+- Codex에서 채널 확인·최근 메시지 조회·역할별 전송을 제공하는 로컬 Discord MCP
+- Windows PowerShell 연결 및 실전송 검사
 
 ## 요구 사항
 
-- macOS — 자동 시작 스크립트 사용 시
+- Windows 10/11 또는 macOS
 - Bash, `curl`, Python 3
+- Node.js 22 이상
 - `tmux`
 - Claude Code와 Discord 채널 플러그인
 - Discord 봇 4개와 각 봇 토큰
@@ -49,6 +52,50 @@ GEMINI_BOT_TOKEN=
 
 `.env`는 Git에서 제외됩니다. 토큰을 문서, 채팅, 커밋에 붙여 넣지 마세요.
 값은 반드시 `KEY=값`처럼 등호 바로 뒤에 입력합니다. `KEY=    값`처럼 공백을 넣으면 Bash가 값을 명령으로 오인할 수 있습니다.
+별도 오케스트레이터 봇을 사용하지 않는 경우 `ORCH_BOT_TOKEN`은 비워둘 수 있으며, 스레드 생성에는 Claude 봇 토큰이 사용됩니다.
+REST 스크립트와 MCP는 `.env`를 셸 코드로 실행하지 않고 허용된 설정 이름만 데이터로 읽습니다.
+
+## Codex Discord MCP
+
+의존성을 설치합니다.
+
+```powershell
+npm install
+```
+
+Codex `config.toml`에 다음 서버를 등록하면 새 Codex 세션부터 Discord 도구를 사용할 수 있습니다.
+
+```toml
+[mcp_servers.discord]
+enabled = true
+command = "node"
+args = ['D:\program-kdn\claude_discord\mcp\discord-mcp.mjs']
+startup_timeout_sec = 30
+```
+
+제공 도구:
+
+- `discord_connection_status`: 세 봇과 기본 채널 연결 확인
+- `discord_list_messages`: 최근 메시지 최대 25개 조회
+- `discord_send_message`: Claude·Codex·Gemini 역할별 메시지 전송
+- `discord_create_thread`: 작업 채널에 공개 스레드 생성
+
+모든 메시지 전송은 멘션을 비활성화합니다. 토큰은 `.env`에서만 읽고 MCP 결과에는 반환하지 않습니다.
+채널 조회·전송은 `.env`의 `WORK_CHANNEL_ID`와 `CHAT_CHANNEL_ID`로 제한되며, 스레드 생성은 작업 채널에서만 허용됩니다.
+
+## Windows 연결 검사
+
+읽기 전용 연결 검사:
+
+```powershell
+.\scripts\Test-DiscordConnection.ps1
+```
+
+세 봇이 테스트 메시지를 각각 한 건씩 보내는 실제 검사:
+
+```powershell
+.\scripts\Test-DiscordConnection.ps1 -SendLiveTest
+```
 
 ## 안전한 사전검사
 

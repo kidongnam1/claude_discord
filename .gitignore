@@ -1,3 +1,5 @@
 .env
 .env.test
 .discord-state/
+node_modules/
+tmp/

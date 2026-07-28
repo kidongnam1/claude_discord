@@ -15,12 +15,10 @@ DISCORD_API="https://discord.com/api/v10"
 
 ENV_FILE="${ENV_FILE:-"$(dirname "$(dirname "$0")")/.env"}"
 
-if [ ! -f "$ENV_FILE" ]; then
-    echo "[ERROR] .env 파일을 찾을 수 없습니다: $ENV_FILE" >&2
-    exit 1
-fi
-
-source "$ENV_FILE"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=load-env.sh
+source "${SCRIPT_DIR}/load-env.sh"
+load_discord_env "$ENV_FILE"
 
 if [ $# -lt 1 ]; then
     echo "사용법: new-thread.sh <스레드 이름>" >&2
@@ -29,8 +27,10 @@ fi
 
 THREAD_NAME="$1"
 
-if [ -z "${ORCH_BOT_TOKEN:-}" ]; then
-    echo "[ERROR] ORCH_BOT_TOKEN 이 비어 있습니다. .env 를 확인하세요." >&2
+THREAD_TOKEN="${ORCH_BOT_TOKEN:-${CLAUDE_BOT_TOKEN:-}}"
+
+if [ -z "$THREAD_TOKEN" ]; then
+    echo "[ERROR] ORCH_BOT_TOKEN 과 CLAUDE_BOT_TOKEN 이 모두 비어 있습니다. .env 를 확인하세요." >&2
     exit 1
 fi
 
@@ -60,7 +60,7 @@ fi
 RESPONSE=$(curl -s \
     -X POST \
     "${DISCORD_API}/channels/${WORK_CHANNEL_ID}/threads" \
-    -H "Authorization: Bot ${ORCH_BOT_TOKEN}" \
+    -H "Authorization: Bot ${THREAD_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "$JSON_BODY")
 

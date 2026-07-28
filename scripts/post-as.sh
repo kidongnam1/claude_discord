@@ -15,12 +15,10 @@ DISCORD_API="https://discord.com/api/v10"
 
 ENV_FILE="${ENV_FILE:-"$(dirname "$(dirname "$0")")/.env"}"
 
-if [ ! -f "$ENV_FILE" ]; then
-    echo "[ERROR] .env 파일을 찾을 수 없습니다: $ENV_FILE" >&2
-    exit 1
-fi
-
-source "$ENV_FILE"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=load-env.sh
+source "${SCRIPT_DIR}/load-env.sh"
+load_discord_env "$ENV_FILE"
 
 if [ $# -lt 3 ]; then
     echo "사용법: post-as.sh <claude|codex|gemini> <채널ID> <메시지...>" >&2

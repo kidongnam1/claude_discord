@@ -1,0 +1,16 @@
+{
+  "name": "gy-discord-multi-agent",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Discord MCP and REST helpers for the GY multi-agent orchestrator",
+  "scripts": {
+    "mcp:start": "node mcp/discord-mcp.mjs",
+    "test": "npm run test:mcp",
+    "test:mcp": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "3.25.76"
+  }
+}

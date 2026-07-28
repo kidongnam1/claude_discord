@@ -9,9 +9,12 @@ cd "$PROJECT_DIR"
 bash -n scripts/*.sh
 
 test -x scripts/install-autostart.sh
+test -x scripts/load-env.sh
 test -x scripts/new-thread.sh
 test -x scripts/post-as.sh
 test -x scripts/validate.sh
+test -f scripts/Test-DiscordConnection.ps1
+test -f mcp/discord-mcp.mjs
 
 VERSION_VALUE=$(tr -d '\r\n' < VERSION)
 if [[ ! "$VERSION_VALUE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -50,5 +53,19 @@ printf '%s\n' "$THREAD_OUTPUT" | grep -q "\"name\": \"CI's smoke test\""
 
 POST_OUTPUT=$(DRY_RUN=1 ENV_FILE="$TEST_ENV" ./scripts/post-as.sh claude 123456789012345678 "CI smoke test")
 printf '%s\n' "$POST_OUTPUT" | grep -q '\[DRY_RUN\] Role: claude'
+
+MALICIOUS_MARKER=$(mktemp)
+rm -f "$MALICIOUS_MARKER"
+printf '%s\n' \
+    'WORK_CHANNEL_ID=123456789012345678' \
+    'CLAUDE_BOT_TOKEN=$(touch should-not-run)' \
+    "UNSUPPORTED=\$(touch \"$MALICIOUS_MARKER\")" > "$TEST_ENV"
+DRY_RUN=1 ENV_FILE="$TEST_ENV" ./scripts/post-as.sh claude 123456789012345678 "safe env parse" >/dev/null
+if [ -e "$MALICIOUS_MARKER" ] || [ -e "should-not-run" ]; then
+    echo "[ERROR] .env 값이 셸 코드로 실행됐습니다." >&2
+    exit 1
+fi
+
+npm test
 
 echo "[OK] 모든 검증을 통과했습니다. VERSION=${VERSION_VALUE}"
