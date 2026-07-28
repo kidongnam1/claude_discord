@@ -28,6 +28,11 @@ grep -qxF '.env' .gitignore
 grep -qxF '.env.test' .gitignore
 grep -qxF '.discord-state/' .gitignore
 
+if grep -Eq '^[A-Z_]+=[[:space:]]+[^#[:space:]]' .env.example; then
+    echo "[ERROR] .env.example 값 앞에 공백이 있습니다." >&2
+    exit 1
+fi
+
 TEST_ENV=$(mktemp)
 trap 'rm -f "$TEST_ENV"' EXIT
 
