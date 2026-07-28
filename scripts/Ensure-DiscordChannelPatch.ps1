@@ -134,6 +134,25 @@ foreach ($target in $targets) {
         $changed = $true
     }
 
+    if (-not $text.Contains("GY_REPLY_ECHO_V1")) {
+        $echoAnchor = @'
+        completeInbound(chat_id)
+        return { content: [{ type: 'text', text: result }] }
+'@
+        $echoReplacement = @'
+        completeInbound(chat_id)
+        // GY_REPLY_ECHO_V1: show the Discord reply body in the local
+        // Claude Channels window as well as on Discord.
+        const terminalResult = `${result}\n[DISCORD_SENT chat_id=${chat_id}]\n${text}`
+        return { content: [{ type: 'text', text: terminalResult }] }
+'@
+        if (-not $text.Contains($echoAnchor)) {
+            throw "Reply echo anchor was not found in $target"
+        }
+        $text = $text.Replace($echoAnchor, $echoReplacement)
+        $changed = $true
+    }
+
     if ($changed) {
         [IO.File]::WriteAllText(
             $target,

@@ -39,17 +39,22 @@ if [ -z "${WORK_CHANNEL_ID:-}" ]; then
     exit 1
 fi
 
-TRUNCATED_NAME=$(python3 -c "import sys; print(sys.argv[1][:90])" "$THREAD_NAME" 2>/dev/null || printf '%s\n' "${THREAD_NAME:0:90}")
+if ! command -v node >/dev/null 2>&1; then
+    echo "[ERROR] Node.js를 찾을 수 없습니다." >&2
+    exit 1
+fi
 
-JSON_BODY=$(python3 -c "
-import json, sys
-payload = {
-    'name': sys.argv[1],
-    'type': 11,
-    'auto_archive_duration': 1440
-}
-print(json.dumps(payload, ensure_ascii=False))
-" "$TRUNCATED_NAME")
+TRUNCATED_NAME=$(node -e \
+    'process.stdout.write(Array.from(process.argv[1]).slice(0, 90).join(""))' \
+    "$THREAD_NAME")
+
+JSON_BODY=$(node -e \
+    'process.stdout.write(JSON.stringify({
+        name: process.argv[1],
+        type: 11,
+        auto_archive_duration: 1440
+    }))' \
+    "$TRUNCATED_NAME")
 
 if [ "${DRY_RUN:-0}" = "1" ]; then
     echo "[DRY_RUN] POST ${DISCORD_API}/channels/${WORK_CHANNEL_ID}/threads"
@@ -64,17 +69,14 @@ RESPONSE=$(curl -s \
     -H "Content-Type: application/json" \
     -d "$JSON_BODY")
 
-THREAD_ID=$(python3 -c "
-import json, sys
-data = json.loads(sys.argv[1])
-if 'id' in data:
-    print(data['id'])
-else:
-    print('[ERROR] ' + json.dumps(data, ensure_ascii=False), file=sys.stderr)
-    sys.exit(1)
-" "$RESPONSE")
-
-if [ $? -eq 0 ] && [ -n "$THREAD_ID" ]; then
+if THREAD_ID=$(node -e '
+    const data = JSON.parse(process.argv[1])
+    if (!data.id) {
+        console.error("[ERROR] " + JSON.stringify(data))
+        process.exit(1)
+    }
+    process.stdout.write(String(data.id))
+' "$RESPONSE") && [ -n "$THREAD_ID" ]; then
     echo "$THREAD_ID"
 else
     echo "[ERROR] 스레드 생성 실패" >&2

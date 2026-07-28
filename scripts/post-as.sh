@@ -7,7 +7,7 @@ set -euo pipefail
 #
 # - 역할에 맞는 봇 토큰을 .env 에서 읽어 Discord REST API v10 으로 전송
 # - content 는 1900자로 자르고 allowed_mentions 은 {"parse": []} (멘션 방지)
-# - JSON 본문은 python3 로 안전하게 만든다
+# - JSON 본문은 프로젝트 필수 런타임인 Node.js로 안전하게 만든다
 # - DRY_RUN=1 이면 실제 전송 없이 요청 본문만 출력
 # - ENV_FILE 환경변수로 다른 .env 파일을 지정할 수 있다
 
@@ -55,34 +55,23 @@ if [ -z "$CHANNEL_ID" ]; then
     exit 1
 fi
 
-JSON_BODY=$(python3 -c "
-import json, sys
-content = sys.argv[1][:1900]
-payload = {
-    'content': content,
-    'allowed_mentions': {'parse': []}
-}
-print(json.dumps(payload, ensure_ascii=False))
-" "$MESSAGE")
+if ! command -v node >/dev/null 2>&1; then
+    echo "[ERROR] Node.js를 찾을 수 없습니다." >&2
+    exit 1
+fi
 
 if [ "${DRY_RUN:-0}" = "1" ]; then
+    JSON_BODY=$(node -e \
+        'process.stdout.write(JSON.stringify({
+            content: Array.from(process.argv[1]).slice(0, 1900).join(""),
+            allowed_mentions: {parse: []}
+        }))' \
+        "$MESSAGE")
     echo "[DRY_RUN] POST ${DISCORD_API}/channels/${CHANNEL_ID}/messages"
     echo "[DRY_RUN] Role: ${ROLE}"
     echo "[DRY_RUN] Body: ${JSON_BODY}"
     exit 0
 fi
 
-HTTP_CODE=$(curl -s -o /tmp/post-as-response.json -w "%{http_code}" \
-    -X POST \
-    "${DISCORD_API}/channels/${CHANNEL_ID}/messages" \
-    -H "Authorization: Bot ${TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_BODY")
-
-if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-    echo "[OK] ${ROLE} → 채널 ${CHANNEL_ID} 게시 완료 (HTTP ${HTTP_CODE})"
-else
-    echo "[ERROR] HTTP ${HTTP_CODE}" >&2
-    cat /tmp/post-as-response.json >&2
-    exit 1
-fi
+POST_AS_TOKEN="$TOKEN" node "${SCRIPT_DIR}/discord-post.mjs" "$CHANNEL_ID" "$MESSAGE"
+echo "[OK] ${ROLE} → 채널 ${CHANNEL_ID} 게시 완료"
