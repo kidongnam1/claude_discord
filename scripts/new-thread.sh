@@ -39,7 +39,7 @@ if [ -z "${WORK_CHANNEL_ID:-}" ]; then
     exit 1
 fi
 
-TRUNCATED_NAME=$(python3 -c "print('$THREAD_NAME'[:90])" 2>/dev/null || echo "${THREAD_NAME:0:90}")
+TRUNCATED_NAME=$(python3 -c "import sys; print(sys.argv[1][:90])" "$THREAD_NAME" 2>/dev/null || printf '%s\n' "${THREAD_NAME:0:90}")
 
 JSON_BODY=$(python3 -c "
 import json, sys
