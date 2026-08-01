@@ -252,26 +252,68 @@ class Api:
     def test_connection(self):
         """Test-DiscordConnection.ps1 실행 — EnvFile 명시적 전달로 $PSScriptRoot 문제 해결."""
         try:
-            cmd = [
-                "powershell",
-                "-NoProfile",
-                "-ExecutionPolicy", "Bypass",
-                "-File", TEST_CONN_PS1,
-                "-EnvFile", ENV_PATH,
+            # Python에서 직접 Discord API 호출로 연결 테스트 (PowerShell 한글 깨짐 방지)
+            env = self.env
+            results = []
+            all_ok = True
+            
+            roles = [
+                ("claude", "CLAUDE_BOT_TOKEN", "CL-Worker"),
+                ("codex", "CODEX_BOT_TOKEN", "codex-worker"),
+                ("gemini", "GEMINI_BOT_TOKEN", "Gm-Worker"),
             ]
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                encoding="utf-8",
-                errors="replace",
-            )
+            
+            chat_id = env.get("CHAT_CHANNEL_ID", "")
+            
+            for role, token_key, bot_name in roles:
+                token = env.get(token_key, "")
+                if not token:
+                    results.append(f"{bot_name}: TOKEN_MISSING")
+                    all_ok = False
+                    continue
+                try:
+                    # 봇 정보 확인
+                    req = urllib.request.Request(
+                        "https://discord.com/api/v10/users/@me",
+                        headers={
+                            "Authorization": f"Bot {token}",
+                            "User-Agent": "OrchestratorGUI/1.0",
+                        },
+                    )
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        bot_data = json.loads(resp.read().decode("utf-8"))
+                    
+                    # 채널 접근 확인
+                    if chat_id:
+                        req2 = urllib.request.Request(
+                            f"https://discord.com/api/v10/channels/{chat_id}",
+                            headers={
+                                "Authorization": f"Bot {token}",
+                                "User-Agent": "OrchestratorGUI/1.0",
+                            },
+                        )
+                        with urllib.request.urlopen(req2, timeout=10) as resp2:
+                            ch_data = json.loads(resp2.read().decode("utf-8"))
+                        ch_name = ch_data.get("name", "?")
+                        results.append(f"{bot_name:15s}  #{ch_name}  CONNECTED")
+                    else:
+                        results.append(f"{bot_name:15s}  CONNECTED (no channel)")
+                except urllib.error.HTTPError as e:
+                    results.append(f"{bot_name:15s}  FAILED (HTTP {e.code})")
+                    all_ok = False
+                except Exception as e:
+                    results.append(f"{bot_name:15s}  FAILED ({e})")
+                    all_ok = False
+            
+            output = f"{'Role':<15s}  {'Channel':<10s}  {'Status'}\n"
+            output += f"{'─'*15}  {'─'*10}  {'─'*10}\n"
+            output += "\n".join(results)
+            
             return {
-                "ok": result.returncode == 0,
-                "stdout": result.stdout or "",
-                "stderr": result.stderr or "",
-                "code": result.returncode,
+                "ok": all_ok,
+                "stdout": output,
+                "stderr": "",
+                "code": 0 if all_ok else 1,
             }
         except Exception as e:
             return {"ok": False, "stdout": "", "stderr": str(e), "code": -1}
