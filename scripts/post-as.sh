@@ -73,5 +73,5 @@ if [ "${DRY_RUN:-0}" = "1" ]; then
     exit 0
 fi
 
-POST_AS_TOKEN="$TOKEN" node "${SCRIPT_DIR}/discord-post.mjs" "$CHANNEL_ID" "$MESSAGE"
+POST_AS_TOKEN="$TOKEN" node "$(dirname "$0")/discord-post.mjs" "$CHANNEL_ID" "$MESSAGE"
 echo "[OK] ${ROLE} → 채널 ${CHANNEL_ID} 게시 완료"

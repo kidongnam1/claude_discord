@@ -62,12 +62,27 @@ if [ "${DRY_RUN:-0}" = "1" ]; then
     exit 0
 fi
 
-RESPONSE=$(curl -s \
-    -X POST \
-    "${DISCORD_API}/channels/${WORK_CHANNEL_ID}/threads" \
-    -H "Authorization: Bot ${THREAD_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_BODY")
+RESPONSE=$(THREAD_TOKEN="$THREAD_TOKEN" WORK_CHANNEL_ID="$WORK_CHANNEL_ID" JSON_BODY="$JSON_BODY" node -e '
+const token = process.env.THREAD_TOKEN;
+const channelId = process.env.WORK_CHANNEL_ID;
+const body = process.env.JSON_BODY;
+fetch(`https://discord.com/api/v10/channels/${channelId}/threads`, {
+  method: "POST",
+  headers: {
+    Authorization: "Bot " + token,
+    "Content-Type": "application/json; charset=utf-8",
+  },
+  body: body,
+})
+.then(async (resp) => {
+  const text = await resp.text();
+  process.stdout.write(text);
+})
+.catch((e) => {
+  process.stderr.write(String(e));
+  process.exit(1);
+});
+' 2>&1)
 
 if THREAD_ID=$(node -e '
     const data = JSON.parse(process.argv[1])
