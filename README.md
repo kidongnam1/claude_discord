@@ -276,3 +276,42 @@ Get-ScheduledTask -TaskName 'DiscordHostsUpdate'
 워커 봇이 #작업 스레드에 메시지를 게시하려면 Discord 서버 설정에서
 각 워커 봇 역할에 "Send Messages in Threads" 권한 부여 필요.
 자세한 내용: `docs/worker-thread-permissions.md`
+
+## 아키텍처: channels 플러그인 vs MCP
+
+두 시스템이 하는 일이 다릅니다:
+
+| 구분 | channels 플러그인 | Discord MCP |
+|---|---|---|
+| 방향 | Discord → PC (메시지 수신) | PC → Discord (명령 전송) |
+| 비유 | 자동 전화기 (메시지가 오면 받음) | 리모컨 (원할 때 직접 조작) |
+| 용도 | 실시간 대화 응답, 오케스트레이터 | 메시지 조회/전송, 스레드 생성, 연결 확인 |
+| 실행 | `claude.exe --channels plugin:discord` | `hermes mcp add discord` 또는 Codex config.toml |
+| 주체 | Claude Code CLI | Hermes / Codex / 외부 AI |
+
+### channels 플러그인
+- Claude Code CLI가 Discord에서 오는 메시지를 실시간 수신
+- 오케스트레이터(지휘자)가 사용자 메시지에 자동 응답
+- `~/.claude/channels/discord/.env`의 DISCORD_BOT_TOKEN 사용
+- `~/.claude/channels/discord/access.json`으로 접근 제어
+
+### Discord MCP
+- Hermes, Codex 등에서 Discord API를 직접 호출
+- 4개 도구: 연결 상태 확인, 메시지 조회, 메시지 전송, 스레드 생성
+- `D:\program\claude_discord\mcp\discord-mcp.mjs` (Node.js MCP 서버)
+- `.env`의 봇 토큰 사용 (ORCH 우선 → CLAUDE fallback)
+
+### Hermes MCP 등록
+```bash
+hermes mcp add discord --command "node" --args "D:\program\claude_discord\mcp\discord-mcp.mjs"
+```
+새 세션에서 `discord_connection_status`, `discord_list_messages`, `discord_send_message`, `discord_create_thread` 도구 사용 가능.
+
+### Codex MCP 등록
+```toml
+[mcp_servers.discord]
+enabled = true
+command = "node"
+args = ['D:\program\claude_discord\mcp\discord-mcp.mjs']
+startup_timeout_sec = 30
+```
