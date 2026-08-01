@@ -26,7 +26,7 @@ test("parseEnv trims whitespace and preserves equals in values", () => {
   assert.equal(result.EMPTY, "");
 });
 
-test("MCP protocol exposes only the four intended Discord tools", async () => {
+test("MCP protocol exposes the six Discord tools", async () => {
   const server = createServer({
     WORK_CHANNEL_ID: "123456789012345678",
     CHAT_CHANNEL_ID: "123456789012345679",
@@ -48,7 +48,9 @@ test("MCP protocol exposes only the four intended Discord tools", async () => {
       "discord_connection_status",
       "discord_create_thread",
       "discord_list_messages",
-      "discord_send_message"
+      "discord_list_roles",
+      "discord_send_message",
+      "discord_update_role_permissions"
     ]
   );
 
@@ -83,7 +85,7 @@ test("stdio entrypoint starts and completes an MCP handshake", async () => {
   try {
     await client.connect(transport);
     const result = await client.listTools();
-    assert.equal(result.tools.length, 4);
+    assert.equal(result.tools.length, 6);
   } finally {
     await client.close();
     await rm(tempDirectory, { recursive: true, force: true });

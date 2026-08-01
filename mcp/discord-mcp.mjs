@@ -278,6 +278,101 @@ export function createServer(config = loadConfig()) {
     }
   );
 
+  // ── 권한 관리 도구: 워커 봇 역할에 Send Messages in Threads 권한 부여 ──
+  server.registerTool(
+    "discord_update_role_permissions",
+    {
+      description:
+        "Update a Discord guild role's permissions. Requires the orchestrator bot to have Manage Roles (0x10000000) or Administrator (0x8) permission. Use to grant Send Messages in Threads (0x40000) to worker bot roles.",
+      inputSchema: {
+        roleId: z.string().regex(SNOWFLAKE),
+        addPermissions: z.string().optional().describe("Bitfield string of permissions to add (OR with current)"),
+        removePermissions: z.string().optional().describe("Bitfield string of permissions to remove (AND NOT)")
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    async ({ roleId, addPermissions, removePermissions }) => {
+      const token = orchestratorToken(config);
+      if (!token) throw new Error("ORCH_BOT_TOKEN and CLAUDE_BOT_TOKEN are empty");
+
+      // Get guild ID from work channel
+      const channel = await discordRequest(token, "GET", `/channels/${config.WORK_CHANNEL_ID}`);
+      const guildId = channel.guild_id;
+      if (!guildId) throw new Error("Could not determine guild ID from work channel");
+
+      // Get current role
+      const roles = await discordRequest(token, "GET", `/guilds/${guildId}/roles`);
+      const role = roles.find(r => r.id === roleId);
+      if (!role) throw new Error(`Role ${roleId} not found in guild ${guildId}`);
+
+      let currentPerms = BigInt(role.permissions);
+      if (addPermissions) currentPerms = currentPerms | BigInt(addPermissions);
+      if (removePermissions) currentPerms = currentPerms & ~BigInt(removePermissions);
+
+      const updated = await discordRequest(token, "PATCH", `/guilds/${guildId}/roles/${roleId}`, {
+        permissions: currentPerms.toString()
+      });
+
+      return textResult({
+        roleId: updated.id,
+        roleName: updated.name,
+        previousPermissions: role.permissions,
+        newPermissions: updated.permissions,
+        added: addPermissions || "none",
+        removed: removePermissions || "none"
+      });
+    }
+  );
+
+  // ── 권한 관리 도구: 길드 역할 목록 조회 ──
+  server.registerTool(
+    "discord_list_roles",
+    {
+      description:
+        "List all roles in the Discord guild with their permissions. Useful for finding worker bot role IDs before updating permissions.",
+      inputSchema: {},
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true
+      }
+    },
+    async () => {
+      const token = orchestratorToken(config);
+      if (!token) throw new Error("ORCH_BOT_TOKEN and CLAUDE_BOT_TOKEN are empty");
+
+      const channel = await discordRequest(token, "GET", `/channels/${config.WORK_CHANNEL_ID}`);
+      const guildId = channel.guild_id;
+      if (!guildId) throw new Error("Could not determine guild ID from work channel");
+
+      const roles = await discordRequest(token, "GET", `/guilds/${guildId}/roles`);
+      const SEND_MESSAGES_IN_THREADS = BigInt(0x40000);
+      const SEND_MESSAGES = BigInt(0x800);
+      const MANAGE_ROLES = BigInt(0x10000000);
+      const ADMINISTRATOR = BigInt(0x8);
+
+      const result = roles.map(r => {
+        const perms = BigInt(r.permissions);
+        return {
+          id: r.id,
+          name: r.name,
+          position: r.position,
+          permissions: r.permissions,
+          send_messages: Boolean(perms & SEND_MESSAGES),
+          send_messages_in_threads: Boolean(perms & SEND_MESSAGES_IN_THREADS),
+          manage_roles: Boolean(perms & MANAGE_ROLES),
+          administrator: Boolean(perms & ADMINISTRATOR)
+        };
+      });
+
+      return textResult(result);
+    }
+  );
+
   return server;
 }
 
