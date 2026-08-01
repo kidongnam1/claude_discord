@@ -29,3 +29,16 @@
 - [DECISION] ORCH_BOT_TOKEN 빈 값 유지 — CLAUDE_BOT_TOKEN으로 자동 fallback 정상 작동 확인
 - [COMPLETE] 환경변수 우선 구조 전환 + Discord 3개 봇 연결 완성 + Windows 자동시작 등록 완료 (2026-08-01)
 
+---
+
+# 로그: 작업 라이프사이클 시뮬레이션 + 광양 PC 설정 스크립트 (2026-08-01)
+
+- [DECISION] 작업 라이프사이클 시뮬레이션 실행 — SQM v9.0.7.2 점검 태스크 (thread_id=1532968535284777134)
+- [APPROVAL] 승인 시뮬레이션 — kdnam01_78978 (user_id=1232185610282991698)
+- [WORKER_CALL] Claude: SQM 아키텍처 설계 검토 → P2 3계층 구조 정상 확인
+- [WORKER_CALL] Codex: 688개 회귀 테스트 검증 → 688 pass, 0 fail
+- [WORKER_CALL] Gemini: v9.0.7.2 변경 이력 조사 → v8.8.4→v9.0.7.2 전수 교체 확인
+- [VERIFICATION] 7단계 11건 메시지 모두 HTTP 200 성공 — CLAUDE.md 라이프사이클 구현 확인
+- [DECISION] setup-gwangyang-discord.ps1 생성 — 광양 PC 1줄 설정 스크립트 (bun+access.json+런처+자동시작)
+- [COMPLETE] 작업 라이프사이클 검증 + 광양 PC 설정 스크립트 완료 (2026-08-01)
+
