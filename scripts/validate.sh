@@ -49,7 +49,7 @@ printf '%s\n' \
     'GEMINI_BOT_TOKEN=dummy-gemini-token' > "$TEST_ENV"
 
 THREAD_OUTPUT=$(DRY_RUN=1 ENV_FILE="$TEST_ENV" ./scripts/new-thread.sh "CI's smoke test")
-printf '%s\n' "$THREAD_OUTPUT" | grep -q "\"name\": \"CI's smoke test\""
+printf '%s\n' "$THREAD_OUTPUT" | grep -q '"name":"CI'"'"'s smoke test"'
 
 POST_OUTPUT=$(DRY_RUN=1 ENV_FILE="$TEST_ENV" ./scripts/post-as.sh claude 123456789012345678 "CI smoke test")
 printf '%s\n' "$POST_OUTPUT" | grep -q '\[DRY_RUN\] Role: claude'
