@@ -237,3 +237,42 @@ GitHub Actions는 push와 pull request마다 다음 항목을 확인합니다.
 - 승인자 ID와 일치하는 사람의 승인만 유효합니다.
 - 봇이나 웹훅의 승인 메시지는 무시합니다.
 - DRY-RUN 출력에도 실제 토큰을 표시하지 않습니다.
+
+## 2026-08-01 업데이트: DNS 하이재킹 해결 + 재발 방지
+
+### 문제 및 해결
+- **문제**: 사내 DNS(10.0.1.61)가 모든 외부 도메인을 내부 IP로 하이재킹 → Discord Gateway 연결 실패
+- **해결**: "이더넷 2" DNS를 8.8.8.8 + 1.1.1.1로 영구 변경
+- **좀비 락**: 과거 경로 중복 실행으로 .in_use 락 13개 누적 → 런처에 자동 정리+중복 가드 추가
+- **ORCH 봇**: 지휘자 전용 복구 (CL-Worker 겸임 해제)
+
+### 추가된 스크립트
+| 스크립트 | 용도 |
+|---|---|
+| `scripts/fix-dns-gwangyang.ps1` | 광양PC DNS 하이재킹 자동 감지/수정 |
+| `scripts/update-discord-hosts.ps1` | Discord 도메인 hosts 자동 업데이트 (주간 작업스케줄러) |
+
+### 추가된 문서
+| 문서 | 용도 |
+|---|---|
+| `docs/dns-hijack-checklist.md` | IT 담당자용 사내DNS 확인 체크리스트 |
+| `docs/gwangyang-visit-checklist.md` | 광양PC 방문 시 10분 설정 가이드 |
+| `docs/worker-thread-permissions.md` | 워커 봇 스레드 권한 설정 가이드 |
+
+### 런처 재발 방지 로직
+`Start-DiscordOrchestrator.ps1`에 추가:
+1. 시작 전 좀비 락 자동 정리 (.in_use 디렉터리에서 죽은 PID 락 삭제)
+2. 중복 실행 가드 (claude.exe --channels가 실행 중이면 새 인스턴스 시작 안 함)
+3. claude.exe 경로 자동 감지 (APPDATA/npm → nvm4w → PATH)
+
+### hosts 자동 업데이트 작업스케줄러
+```powershell
+# 등록 확인
+Get-ScheduledTask -TaskName 'DiscordHostsUpdate'
+# 매주 일요일 오전 9시 자동 실행
+```
+
+### 워커 봇 스레드 권한 (별도 해결 필요)
+워커 봇이 #작업 스레드에 메시지를 게시하려면 Discord 서버 설정에서
+각 워커 봇 역할에 "Send Messages in Threads" 권한 부여 필요.
+자세한 내용: `docs/worker-thread-permissions.md`
