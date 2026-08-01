@@ -264,6 +264,7 @@ class Api:
             ]
             
             chat_id = env.get("CHAT_CHANNEL_ID", "")
+            work_id = env.get("WORK_CHANNEL_ID", "")
             
             for role, token_key, bot_name in roles:
                 token = env.get(token_key, "")
@@ -283,21 +284,25 @@ class Api:
                     with urllib.request.urlopen(req, timeout=10) as resp:
                         bot_data = json.loads(resp.read().decode("utf-8"))
                     
-                    # 채널 접근 확인
-                    if chat_id:
-                        req2 = urllib.request.Request(
-                            f"https://discord.com/api/v10/channels/{chat_id}",
-                            headers={
-                                "Authorization": f"Bot {token}",
-                                "User-Agent": "OrchestratorGUI/1.0",
-                            },
-                        )
-                        with urllib.request.urlopen(req2, timeout=10) as resp2:
-                            ch_data = json.loads(resp2.read().decode("utf-8"))
-                        ch_name = ch_data.get("name", "?")
-                        results.append(f"{bot_name:15s}  #{ch_name}  CONNECTED")
-                    else:
-                        results.append(f"{bot_name:15s}  CONNECTED (no channel)")
+                    # 채널 접근 확인 — #수다와 #작업 모두
+                    ch_names = []
+                    for ch_id in [chat_id, work_id]:
+                        if ch_id:
+                            try:
+                                req2 = urllib.request.Request(
+                                    f"https://discord.com/api/v10/channels/{ch_id}",
+                                    headers={
+                                        "Authorization": f"Bot {token}",
+                                        "User-Agent": "OrchestratorGUI/1.0",
+                                    },
+                                )
+                                with urllib.request.urlopen(req2, timeout=10) as resp2:
+                                    ch_data = json.loads(resp2.read().decode("utf-8"))
+                                ch_names.append(f"#{ch_data.get('name', '?')}")
+                            except:
+                                ch_names.append("#(접근불가)")
+                    ch_str = ", ".join(ch_names) if ch_names else "(no channel)"
+                    results.append(f"{bot_name:15s}  {ch_str:20s}  CONNECTED")
                 except urllib.error.HTTPError as e:
                     results.append(f"{bot_name:15s}  FAILED (HTTP {e.code})")
                     all_ok = False
@@ -305,8 +310,8 @@ class Api:
                     results.append(f"{bot_name:15s}  FAILED ({e})")
                     all_ok = False
             
-            output = f"{'Role':<15s}  {'Channel':<10s}  {'Status'}\n"
-            output += f"{'─'*15}  {'─'*10}  {'─'*10}\n"
+            output = f"{'Role':<15s}  {'Channels':<22s}  {'Status'}\n"
+            output += f"{'─'*15}  {'─'*22}  {'─'*10}\n"
             output += "\n".join(results)
             
             return {
