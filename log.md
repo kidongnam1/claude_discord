@@ -42,3 +42,80 @@
 - [DECISION] setup-gwangyang-discord.ps1 생성 — 광양 PC 1줄 설정 스크립트 (bun+access.json+런처+자동시작)
 - [COMPLETE] 작업 라이프사이클 검증 + 광양 PC 설정 스크립트 완료 (2026-08-01)
 
+---
+
+# 로그: Discord 오케스트레이터 연결 불량 진단 및 좀비 락 근본 해결 (2026-08-01)
+
+- [ERROR] Discord 오케스트레이터 연결 불량 — 좀비 락 13개(12개 dead) 누적으로 Discord Gateway WebSocket 연결 충돌
+- [DECISION] 근본 원인 분석: 두 자동시작 entry가 서로 다른 경로에서 매 로그인마다 claude.exe 중복 실행
+    - 작업스케줄러 GY_Discord_Orchestrator → D:\program-kdn\claude_discord\ (과거 경로, 무효화된 토큰)
+    - 시작폴더 바로가기 → D:\program\claude_discord\ (현재 경로, 유효 토큰)
+    - 두 인스턴스가 Discord Gateway에 동시 연결 시도 → 세션 충돌 → 비정상 종료 → .in_use 락 잔류 → 좀비 누적
+- [VERIFICATION] 봇 3개(CL-Worker, codex-worker, Gm-Worker) Discord API REST 연결 정상 — 좀비 락이 Gateway 문제
+- [DECISION] 좀비 락 13개 전체 삭제 (12 dead + 1 dead 45388)
+- [DECISION] 과거 경로 작업스케줄러 GY_Discord_Orchestrator 제거 (D:\program-kdn\ → 중복 원인)
+- [VERIFICATION] 과거 .env 토큰 검증: ORCH 봇만 VALID(현재 미사용), CLAUDE/CODEX/GEMINI 401 INVALID (Regenerate됨)
+- [VERIFICATION] 현재 .env 토큰 검증: CLAUDE/CODEX/GEMINI 모두 VALID — 정상 작동 확인
+- [DECISION] 과거 경로 D:\program-kdn\claude_discord\ → _archive\claude_discord_OLD_20260801 이동
+- [VERIFICATION] 시작폴더 바로가기 경로 확인: D:\program\claude_discord\ (현재 경로 정확히 가리킴)
+- [DECISION] 런처(Start-DiscordOrchestrator.ps1)에 재발 방지 로직 2종 추가:
+    ① 시작 전 죽은 PID 락 자동 정리 (.in_use 디렉터리)
+    ② 중복 실행 가드 (claude.exe --channels 실행 중이면 새 인스턴스 시작 안 함)
+- [VERIFICATION] 오케스트레이터 재시작(PID 63408) — .in_use 락 1개(정상), Discord Gateway Established 17개
+- [VERIFICATION] #수다 채널 3개 봇 실전송 성공 (HTTP 200, message ID 반환)
+- [VERIFICATION] 오케스트레이터 실시간 응답 확인 — 사용자 "배고파" → CL-Worker "국밥/백반 추천" 응답
+- [COMPLETE] 좀비 락 근본 해결 + 단일 자동시작 정리 + 런처 재발 방지 로직 추가 + 과거 토큰 무효 확인 (2026-08-01)
+
+---
+
+# 로그: ORCH 봇 지휘자 복구 + channels 플러그인 전환 (2026-08-01)
+
+- [DECISION] ORCH 봇(Orchestrator, application ID 1531464885274152980)을 지휘자 전용으로 복구
+- [VERIFICATION] ORCH 봇 토큰 유효성 확인 — VALID, #작업/#수다 양 채널 접근 권한 OK
+- [DECISION] .env ORCH_BOT_TOKEN에 새 토큰 저장 (사용자 제공, 길이 72)
+- [DECISION] channels 플러그인(.claude/channels/discord/.env) DISCORD_BOT_TOKEN을 ORCH 봇 토큰으로 전환
+    - 전환 전: CL-Worker 봇 (지휘자+워커 겸임)
+    - 전환 후: Orchestrator 봇 (지휘자 전용)
+- [VERIFICATION] 토큰 일치 확인: channels/.env == .env ORCH_BOT_TOKEN
+- [VERIFICATION] ORCH 봇 Discord API 신원 확인: username=Orchestrator, ID=1531464885274152980
+- [VERIFICATION] #수다 채널 ORCH 봇 메시지 게시 성공 (HTTP 200, author=Orchestrator)
+- [COMPLETE] ORCH 봇 지휘자 복구 + channels 플러그인 전환 완료 (2026-08-01)
+
+---
+
+# 로그: Discord Gateway DNS 하이재킹 진단 및 근본 해결 (2026-08-01)
+
+- [ERROR] PC 오케스트레이터 Discord 수신 불가 — 폰은 정상, PC만 안 됨
+- [VERIFICATION] 원인 분석: "이더넷 2" DNS 서버 10.0.1.61 (ns.teklux.co.kr, 사내 DNS)이 Discord 도메인 하이재킹
+    - gateway.discord.gg → 10.0.1.61 (gw.teklux.co.kr) — 내부 게이트웨이
+    - discord.com → 10.0.1.61 (mail.teklux.co.kr) — 내부 메일 서버
+    - 정상 IP: 162.159.130.234 등
+- [VERIFICATION] 전수 검사: google.com, github.com, api.openai.com, anthropic.com 등 10개 도메인 전부 10.0.1.61로 하이재킹
+- [VERIFICATION] 폰이 정상인 이유: LTE 데이터망/다른 DNS 사용으로 정상 IP 해석
+- [DECISION] hosts 파일에 Discord 도메인 3개 직접 IP 등록 (임시 우회)
+    - 162.159.133.234 gateway.discord.gg
+    - 162.159.136.232 discord.com
+    - 162.159.129.233 cdn.discordapp.com
+- [DECISION] 근본 해결: "이더넷 2" DNS 서버를 8.8.8.8 + 1.1.1.1로 변경 (관리자 권한, UAC 승인)
+- [VERIFICATION] DNS 변경 후 모든 도메인 정상 해석 확인
+    - gateway.discord.gg → 162.159.130.234 (정상)
+    - discord.com → 162.159.135.232 (정상)
+    - google.com → 142.250.197.78 (정상)
+- [VERIFICATION] claude.exe(PID 56080) 재시작 후 Discord IP(172.64.145.26, 104.18.42.230) Established 연결 확인
+- [VERIFICATION] Discord Gateway WebSocket 연결 성공 — 총 40개 Established TCP 연결
+- [VERIFICATION] 오케스트레이터 실시간 응답 확인 — 사용자 "지금 몆시니" → Orchestrator "오후 2시 35분" 응답
+- [COMPLETE] Discord Gateway DNS 하이재킹 근본 해결 — DNS 서버 8.8.8.8+1.1.1.1로 영구 변경 (2026-08-01)
+
+---
+
+# 로그: 광양PC DNS 예방 + hosts 자동화 + 사내DNS 확인 체크리스트 (2026-08-01)
+
+- [VERIFICATION] 광양PC(100.69.203.94) Tailscale HTTP 정상 응답 (HTTP 307), SSH 미개방(포트22 타임아웃)
+- [DECISION] 광양PC DNS 점검/수정 스크립트 생성: scripts/fix-dns-gwangyang.ps1
+    - 사내DNS(10.0.1.61) 하이재킹 자동 감지 + 8.8.8.8/1.1.1.1 자동 변경 + 검증
+- [DECISION] hosts 자동 업데이트 스크립트 생성: scripts/update-discord-hosts.ps1
+    - Google DNS에서 Discord 최신 IP 조회 → hosts 파일 자동 업데이트 → DNS 캐시 플러시
+- [DECISION] 사내DNS 의도 확인 체크리스트 생성: docs/dns-hijack-checklist.md
+    - IT 담당자에게 전달: 의도된 설정인지, DNS 변경이 정책상 문제없는지 확인
+- [COMPLETE] 광양PC DNS 예방 스크립트 + hosts 자동화 + 사내DNS 확인 체크리스트 완료 (2026-08-01)
+
