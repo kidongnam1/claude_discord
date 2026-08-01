@@ -168,6 +168,18 @@ Start-ScheduledTask -TaskName 'GYDiscordOrchestrator'
 Unregister-ScheduledTask -TaskName 'GYDiscordOrchestrator' -Confirm:$false
 ```
 
+### 설정 마법사 (최초 설정)
+
+7개 값을 순서대로 묻고 .env를 자동 생성합니다. 채널 ID와 승인자 ID는 기본값이 미리 채워져 있습니다.
+
+```powershell
+.\scripts\setup-discord.ps1
+```
+
+- 기존 .env가 있으면 현재 값을 기본값으로 보여줍니다 (Enter로 유지)
+- 봇 토큰은 입력값을 화면에 다시 출력하지 않습니다
+- 완료 후 DRY_RUN 테스트를 자동 실행합니다
+
 ### 오케스트레이터 런처 (.discord-state)
 
 `Start-DiscordOrchestratorVisible.ps1`은 `.discord-state\Start-DiscordOrchestrator.ps1`을 호출합니다.
