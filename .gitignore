@@ -1,5 +1,6 @@
 .env
 .env.test
 .discord-state/
+.harness-state/
 node_modules/
 tmp/

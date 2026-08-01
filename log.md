@@ -170,3 +170,16 @@
     - 산출물: MCP 6도구, 데일리 리포트, hosts 자동업데이트, DNS 스킬, README, 스크립트 5종
     - git 커밋 8건, 테스트 5/5 pass
 
+---
+
+# 로그: 하네스 엔지니어링 워크플로우 구현 (2026-08-01)
+
+- [DECISION] 하네스 엔지니어링 PRD 작성: docs/harness-workflow-prd.md (4단계: 기획/생산/검토/재검토)
+- [PLAN] CLAUDE.md 하네스 규칙 추가 — 역할 정의, 단계 흐름, 승인 게이트, 반려/회귀, 작업 규모별 생략
+- [PLAN] 템플릿 3종 생성: harness-plan.md, harness-review.md, harness-verify.md
+- [BUILD] harness-status.sh 구현 — init/stage/approve/reject/retry/scale/get/list, MSYS 경로 변환, 테스트 통과
+- [BUILD] MCP discord_harness_status + discord_harness_list 도구 추가 (총 8개 도구)
+- [VERIFICATION] npm test 5/5 pass — MCP 8개 도구 정상
+- [DECISION] .gitignore에 .harness-state/ 추가
+- [COMPLETE] 하네스 워크플로우 구현 1차 완료 — CLAUDE.md + 템플릿 + 상태관리 + MCP 도구 (2026-08-01)
+

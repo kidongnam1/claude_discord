@@ -396,6 +396,66 @@ export function createServer(config = loadConfig()) {
     }
   );
 
+  // ── 하네스 워크플로우 상태 조회 ──
+  server.registerTool(
+    "discord_harness_status",
+    {
+      description:
+        "Get the harness engineering workflow status for a task. Returns stage, scale, retry count, approval gates, and timing.",
+      inputSchema: {
+        threadId: z.string().regex(SNOWFLAKE).describe("Discord thread ID of the harness task")
+      },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false
+      }
+    },
+    async ({ threadId }) => {
+      const harnessDir = path.join(PROJECT_DIR, ".harness-state");
+      const stateFile = path.join(harnessDir, `${threadId}.json`);
+      if (!fs.existsSync(stateFile)) {
+        return textResult({ error: `No harness task found for thread ${threadId}` });
+      }
+      const state = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+      return textResult(state);
+    }
+  );
+
+  // ── 하네스 워크플로우 모든 작업 목록 ──
+  server.registerTool(
+    "discord_harness_list",
+    {
+      description:
+        "List all harness engineering workflow tasks with their current stage and status.",
+      inputSchema: {},
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false
+      }
+    },
+    async () => {
+      const harnessDir = path.join(PROJECT_DIR, ".harness-state");
+      if (!fs.existsSync(harnessDir)) {
+        return textResult({ tasks: [] });
+      }
+      const files = fs.readdirSync(harnessDir).filter(f => f.endsWith(".json"));
+      const tasks = files.map(f => {
+        const state = JSON.parse(fs.readFileSync(path.join(harnessDir, f), "utf8"));
+        return {
+          thread_id: state.thread_id,
+          task_name: state.task_name,
+          stage: state.stage,
+          scale: state.scale,
+          retry_count: state.retry_count,
+          g1_approved: state.g1_approved,
+          g3_approved: state.g3_approved,
+          g4_completed: state.g4_completed
+        };
+      });
+      return textResult({ tasks });
+    }
+  );
+
   return server;
 }
 
