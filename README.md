@@ -315,3 +315,23 @@ command = "node"
 args = ['D:\program\claude_discord\mcp\discord-mcp.mjs']
 startup_timeout_sec = 30
 ```
+
+## Hermes 내장 discord toolset vs 커스텀 MCP
+
+Hermes는 두 가지 Discord 연동 방식을 모두 지원합니다:
+
+| 구분 | Hermes 내장 discord toolset | 커스텀 Discord MCP |
+|---|---|---|
+| 설치 | `hermes tools enable discord` | `hermes mcp add discord` |
+| 범용성 | 모든 Hermes 사용자용 | GY 프로젝트 전용 |
+| 토큰 관리 | Hermes config/gateway에서 관리 | .env에서 독립 관리 |
+| 채널 제한 | Hermes gateway 설정에 따름 | WORK/CHAT 채널만 허용 (allowlist) |
+| 역할 분리 | 단일 봇 | 4개 봇(ORCH/CL/Codex/Gm) 역할 분담 |
+| 권한 관리 | 없음 | discord_list_roles + discord_update_role_permissions |
+| 멘션 제어 | Hermes 설정 | 모든 전송에서 멘션 비활성화 |
+| 스레드 생성 | 일반적 | 작업 채널만 제한 |
+| 도구 수 | Hermes 버전에 따라 다름 | 6개 (연결/조회/전송/스레드/역할조회/권한수정) |
+
+**GY 프로젝트 추천**: 커스텀 MCP 사용 — 역할 분담(4개 봇), 채널 제한, 권한 관리가 맞춤화되어 있어 Hermes 내장 toolset보다 정확하게 제어 가능.
+
+**일반적 Discord 봇 용도**: Hermes 내장 discord toolset이 간편.
