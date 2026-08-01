@@ -119,3 +119,20 @@
     - IT 담당자에게 전달: 의도된 설정인지, DNS 변경이 정책상 문제없는지 확인
 - [COMPLETE] 광양PC DNS 예방 스크립트 + hosts 자동화 + 사내DNS 확인 체크리스트 완료 (2026-08-01)
 
+---
+
+# 로그: #작업 라이프사이클 테스트 + 서비스 DNS 영향 점검 + 광양PC 방문 체크리스트 (2026-08-01)
+
+- [VERIFICATION] #작업 채널 스레드 생성 성공 (thread_id=1533013592520130730) — ORCH 봇 정상
+- [ERROR] 워커 3개 봇(CL/Codex/Gm) 스레드 메시지 게시 403 Forbidden — 워커 봇 쓰기 권한 부족
+    - 원인: Discord 서버에서 워커 봇들이 #작업 채널 스레드에 메시지를 보낼 권한 없음
+    - 읽기는 200 OK, 쓰기만 403
+    - 해결 필요: Discord 서버 설정에서 워커 3개 봇에 Send Messages 권한 부여
+- [VERIFICATION] ORCH 봇 검증+완료 메시지 게시 성공 — PC 오케스트레이터 정상 작동 확인
+- [VERIFICATION] DNS 변경 후 서비스 연결 점검: GitHub(200), npm(200), PyPI(200), Supabase(200), Tailscale(200), Google(200), Telegram(302), Discord Gateway 정상
+- [VERIFICATION] 사내DNS 하이재킹 영향: SQM(GitHub), GY Remote(Telegram), Rubi AI Hub(Supabase) 전부 하이재킹되었으나 DNS 변경 후 정상 복구
+- [DECISION] 광양PC 방문 체크리스트 생성: docs/gwangyang-visit-checklist.md
+    - 5단계: git pull → fix-dns-gwangyang.ps1 → setup-gwangyang-discord.ps1 → 오케스트레이터 실행 → 검증
+    - 예상 소요: 10분
+- [COMPLETE] #작업 라이프사이클 테스트 + 서비스 DNS 점검 + 광양PC 방문 체크리스트 완료 (2026-08-01)
+
