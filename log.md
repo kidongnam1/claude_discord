@@ -151,3 +151,22 @@
 - [VERIFICATION] npm test 5/5 pass — new-thread.sh 및 MCP 변경사항 정상
 - [COMPLETE] 워커 봇 스레드 권한 해결 + 자동 추가 로직 완료 (2026-08-01)
 
+---
+
+# 로그: Message Content Intent + 최종 라이프사이클 검증 (2026-08-01)
+
+- [ERROR] 폰에서 Discord 메시지 보내도 PC 오케스트레이터 반응 없음
+- [VERIFICATION] 전체 진단: .env/채널/권한/DNS/Gateway/TCP — 모두 정상
+- [VERIFICATION] Message Content Intent 테스트: ORCH 봇이 메시지 내용 읽기 성공 (REST API)
+- [VERIFICATION] Discord 플러그인 bun.exe(PID 72036) Gateway WebSocket 연결: 162.159.133.234 Established
+- [DECISION] Developer Portal → Bot → Privileged Gateway Intents → MESSAGE CONTENT INTENT 활성화
+- [VERIFICATION] Intent 활성화 후 폰 메시지에 오케스트레이터 실시간 응답 확인 — "이제 잘 작동함"
+- [VERIFICATION] 최종 라이프사이클 테스트: 스레드 생성→워커 3개 자동 참여→3/3 메시지 게시→검증 완료
+    - thread_id=1533069595773108224
+    - ORCH 봇 계획/검증/완료 메시지: HTTP 200
+    - CL-Worker/codex-worker/Gm-Worker: 3/3 HTTP 200
+- [COMPLETE] Discord 오케스트레이터 전체 문제 해결 + 라이프사이클 검증 완료 (2026-08-01)
+    - 해결 8단계: 좀비락→과거경로→ORCH봇→DNS→스레드권한→자동참여→Intent→광양PC예방
+    - 산출물: MCP 6도구, 데일리 리포트, hosts 자동업데이트, DNS 스킬, README, 스크립트 5종
+    - git 커밋 8건, 테스트 5/5 pass
+
