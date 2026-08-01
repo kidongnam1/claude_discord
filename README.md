@@ -51,6 +51,7 @@ GEMINI_BOT_TOKEN=
 ```
 
 `.env`는 Git에서 제외됩니다. 토큰을 문서, 채팅, 커밋에 붙여 넣지 마세요.
+Windows 시스템 환경변수에 직접 설정해도 동작합니다 (환경변수가 `.env` 파일보다 우선합니다).
 값은 반드시 `KEY=값`처럼 등호 바로 뒤에 입력합니다. `KEY=    값`처럼 공백을 넣으면 Bash가 값을 명령으로 오인할 수 있습니다.
 별도 오케스트레이터 봇을 사용하지 않는 경우 `ORCH_BOT_TOKEN`은 비워둘 수 있으며, 스레드 생성에는 Claude 봇 토큰이 사용됩니다.
 REST 스크립트와 MCP는 `.env`를 셸 코드로 실행하지 않고 허용된 설정 이름만 데이터로 읽습니다.
@@ -146,6 +147,44 @@ tmux attach -t orchestrator
 launchctl unload "$HOME/Library/LaunchAgents/com.discord-multiagent.orchestrator.plist"
 ```
 
+## Windows 자동 시작
+
+Windows 작업스케줄러에 로그인 시 자동 실행을 등록합니다.
+
+```powershell
+.\scripts\install-autostart.ps1
+```
+
+확인:
+
+```powershell
+Get-ScheduledTask -TaskName 'GYDiscordOrchestrator'
+Start-ScheduledTask -TaskName 'GYDiscordOrchestrator'
+```
+
+해제:
+
+```powershell
+Unregister-ScheduledTask -TaskName 'GYDiscordOrchestrator' -Confirm:$false
+```
+
+### 오케스트레이터 런처 (.discord-state)
+
+`Start-DiscordOrchestratorVisible.ps1`은 `.discord-state\Start-DiscordOrchestrator.ps1`을 호출합니다.
+이 디렉터리는 `.gitignore`에 포함되어 있으므로 각 PC에서 처음 실행 전 생성해야 합니다.
+
+```powershell
+# .discord-state 디렉터리가 없으면 생성
+mkdir .discord-state -Force
+# Claude Code CLI를 Discord channels 플러그인과 함께 실행하는 런처를 배치
+# (macOS의 install-autostart.sh가 tmux에서 claude --channels를 실행하는 것과 동일)
+```
+
+런처는 다음을 수행합니다:
+1. `.env` 파일이 있으면 로드 (시스템 환경변수가 이미 있으면 덮어쓰지 않음)
+2. 필수 환경변수 확인
+3. `claude --channels plugin:discord@claude-plugins-official` 실행
+
 ## 디렉터리 구조
 
 ```text
@@ -156,6 +195,7 @@ launchctl unload "$HOME/Library/LaunchAgents/com.discord-multiagent.orchestrator
 ├── _templates/               # 태스크·지시서·결과·로그 템플릿
 ├── scripts/
 │   ├── install-autostart.sh  # macOS 자동 시작 등록
+│   ├── install-autostart.ps1 # Windows 작업스케줄러 자동 시작 등록
 │   ├── new-thread.sh         # Discord 스레드 생성
 │   ├── post-as.sh            # 워커 봇 메시지 게시
 │   └── validate.sh           # 로컬·CI 공통 검사

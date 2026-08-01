@@ -32,11 +32,29 @@ export function parseEnv(text) {
   return result;
 }
 
+const DISCORD_ENV_KEYS = [
+  "WORK_CHANNEL_ID",
+  "CHAT_CHANNEL_ID",
+  "APPROVER_USER_ID",
+  "ORCH_BOT_TOKEN",
+  "CLAUDE_BOT_TOKEN",
+  "CODEX_BOT_TOKEN",
+  "GEMINI_BOT_TOKEN"
+];
+
 export function loadConfig(envPath = ENV_PATH) {
-  if (!fs.existsSync(envPath)) {
-    throw new Error(`Discord environment file not found: ${envPath}`);
+  // .env 파일이 있으면 읽고, 시스템 환경변수가 우선한다.
+  let fileConfig = {};
+  if (fs.existsSync(envPath)) {
+    fileConfig = parseEnv(fs.readFileSync(envPath, "utf8"));
   }
-  return parseEnv(fs.readFileSync(envPath, "utf8"));
+  const result = { ...fileConfig };
+  for (const key of DISCORD_ENV_KEYS) {
+    if (process.env[key]) {
+      result[key] = process.env[key];
+    }
+  }
+  return result;
 }
 
 function tokenFor(config, role) {
