@@ -136,3 +136,18 @@
     - 예상 소요: 10분
 - [COMPLETE] #작업 라이프사이클 테스트 + 서비스 DNS 점검 + 광양PC 방문 체크리스트 완료 (2026-08-01)
 
+---
+
+# 로그: 워커 봇 스레드 권한 해결 + 자동 추가 로직 (2026-08-01)
+
+- [ERROR] 워커 3개 봇 #작업 스레드 메시지 게시 403 Forbidden — Send Messages in Threads 권한 없음
+- [VERIFICATION] ORCH 봇 재초대(관리자 권한)로 권한 부여 링크 생성 및 사용자 승인
+- [VERIFICATION] ORCH 봇 Administrator=True 확인 — API로 워커 3개 봇에 Send Messages in Threads 자동 부여 성공
+- [VERIFICATION] 워커 봇 스레드 참여(Missing Access 50001) → ORCH 봇이 워커 3개를 스레드 멤버로 자동 추가
+- [VERIFICATION] 워커 3개 봇 스레드 메시지 게시 3/3 성공 (HTTP 200) — #작업 라이프사이클 정상 완료
+- [DECISION] new-thread.sh: 스레드 생성 후 워커 봇 3개 자동 추가 로직 추가
+- [DECISION] MCP discord_create_thread: 스레드 생성 후 워커 봇 자동 추가 + workers_added 반환
+- [DECISION] ORCH 봇 Administrator 권한 유지 — 새 스레드 생성 시 워커 자동 추가에 필요
+- [VERIFICATION] npm test 5/5 pass — new-thread.sh 및 MCP 변경사항 정상
+- [COMPLETE] 워커 봇 스레드 권한 해결 + 자동 추가 로직 완료 (2026-08-01)
+

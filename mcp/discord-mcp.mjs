@@ -269,11 +269,34 @@ export function createServer(config = loadConfig()) {
         type: 11,
         auto_archive_duration: 1440
       });
+
+      // ── 워커 봇 3개를 스레드에 자동 추가 ──
+      // 워커 봇이 스레드에 참여해야 메시지를 게시할 수 있다 (Missing Access 50001 방지).
+      // ORCH 봇이 Administrator 권한이 있어야 워커 봇을 추가할 수 있다.
+      const workerBotIds = [
+        config.CLAUDE_BOT_TOKEN ? "1531522623597707362" : null,
+        config.CODEX_BOT_TOKEN ? "1531485839035469905" : null,
+        config.GEMINI_BOT_TOKEN ? "1531486384257368280" : null
+      ].filter(Boolean);
+
+      const addedWorkers = [];
+      for (const workerId of workerBotIds) {
+        try {
+          await discordRequest(token, "PUT", `/channels/${thread.id}/thread-members/${workerId}`, {
+            user_id: workerId
+          });
+          addedWorkers.push(workerId);
+        } catch (e) {
+          // 워커 추가 실패는 스레드 생성 성공을 무효화하지 않는다
+        }
+      }
+
       return textResult({
         id: thread.id,
         name: thread.name,
         parent_id: thread.parent_id,
-        type: thread.type
+        type: thread.type,
+        workers_added: addedWorkers.length
       });
     }
   );

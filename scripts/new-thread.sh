@@ -93,6 +93,36 @@ if THREAD_ID=$(node -e '
     process.stdout.write(String(data.id))
 ' "$RESPONSE") && [ -n "$THREAD_ID" ]; then
     echo "$THREAD_ID"
+
+    # ── 워커 봇 3개를 스레드에 자동 추가 ──────────────────────────
+    # ORCH 봇이 Administrator 권한이 있어야 워커 봇을 스레드에 추가할 수 있다.
+    # 워커 봇이 스레드에 참여해야 메시지를 게시할 수 있다 (Missing Access 50001 방지).
+    WORKER_BOT_IDS=("${CLAUDE_BOT_ID:-1531522623597707362}"
+                    "${CODEX_BOT_ID:-1531485839035469905}"
+                    "${GEMINI_BOT_ID:-1531486384257368280}")
+
+    for WORKER_ID in "${WORKER_BOT_IDS[@]}"; do
+        ADD_RESULT=$(THREAD_TOKEN="$THREAD_TOKEN" THREAD_ID="$THREAD_ID" WORKER_ID="$WORKER_ID" node -e '
+const token = process.env.THREAD_TOKEN;
+const threadId = process.env.THREAD_ID;
+const workerId = process.env.WORKER_ID;
+fetch(`https://discord.com/api/v10/channels/${threadId}/thread-members/${workerId}`, {
+  method: "PUT",
+  headers: {
+    Authorization: "Bot " + token,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ user_id: workerId }),
+})
+.then((resp) => { process.stdout.write(String(resp.status)); })
+.catch((e) => { process.stderr.write(String(e)); process.exit(0); });
+' 2>&1) || true
+        if [ "$ADD_RESULT" = "204" ] || [ "$ADD_RESULT" = "201" ]; then
+            echo "[INFO] 워커 봇 ${WORKER_ID} 스레드 참여 완료" >&2
+        else
+            echo "[WARN] 워커 봇 ${WORKER_ID} 스레드 참여 실패 (HTTP ${ADD_RESULT})" >&2
+        fi
+    done
 else
     echo "[ERROR] 스레드 생성 실패" >&2
     echo "$RESPONSE" >&2
