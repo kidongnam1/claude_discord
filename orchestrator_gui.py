@@ -250,13 +250,14 @@ class Api:
     # 연결 테스트
     # ------------------------------------------------------------------
     def test_connection(self):
-        """Test-DiscordConnection.ps1 실행."""
+        """Test-DiscordConnection.ps1 실행 — EnvFile 명시적 전달로 $PSScriptRoot 문제 해결."""
         try:
             cmd = [
                 "powershell",
                 "-NoProfile",
                 "-ExecutionPolicy", "Bypass",
                 "-File", TEST_CONN_PS1,
+                "-EnvFile", ENV_PATH,
             ]
             result = subprocess.run(
                 cmd,
