@@ -36,6 +36,7 @@ async function runHarnessAction(tempRoot, action, ...args) {
       [
         "-lc",
         `HARNESS_DIR=${shellQuote(toWslPath(harnessDir))} ${[
+          "bash",
           HARNESS_SCRIPT_BASH,
           action,
           ...args,
