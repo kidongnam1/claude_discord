@@ -27,9 +27,9 @@ if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ "${GITHUB_REF_NAME:-}" != "v${VERSION
     exit 1
 fi
 
-grep -qxF '.env' .gitignore
-grep -qxF '.env.test' .gitignore
-grep -qxF '.discord-state/' .gitignore
+grep -qxF '.env' <(tr -d '\r' < .gitignore)
+grep -qxF '.env.test' <(tr -d '\r' < .gitignore)
+grep -qxF '.discord-state/' <(tr -d '\r' < .gitignore)
 
 if grep -Eq '^[A-Z_]+=[[:space:]]+[^#[:space:]]' .env.example; then
     echo "[ERROR] .env.example 값 앞에 공백이 있습니다." >&2

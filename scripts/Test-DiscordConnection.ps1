@@ -37,7 +37,7 @@ function Invoke-Discord {
 
     $headers = @{
         Authorization = "Bot $Token"
-        "User-Agent" = "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.1.0)"
+        "User-Agent" = "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.2.0)"
     }
     $parameters = @{
         Uri = "$DiscordApi$Endpoint"

@@ -2,6 +2,9 @@
 .env.test
 .discord-state/
 .harness-state/
+.bkit/audit/
+.bkit/runtime/
+.bkit/state/
 node_modules/
 tmp/
 __pycache__/

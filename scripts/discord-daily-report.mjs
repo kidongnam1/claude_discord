@@ -35,7 +35,7 @@ const dateStr = kstTime.toISOString().slice(0, 10);
 const resp = await fetch(`https://discord.com/api/v10/channels/${workChannel}/messages?limit=25`, {
   headers: {
     Authorization: `Bot ${orchToken}`,
-    "User-Agent": "DiscordBot (gy, 1.1.0)"
+    "User-Agent": "DiscordBot (gy, 1.2.0)"
   }
 });
 const messages = await resp.json();
@@ -79,7 +79,7 @@ const postResp = await fetch(`https://discord.com/api/v10/channels/${chatChannel
   headers: {
     Authorization: `Bot ${orchToken}`,
     "Content-Type": "application/json",
-    "User-Agent": "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.1.0)"
+    "User-Agent": "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.2.0)"
   },
   body: JSON.stringify({ content: report, allowed_mentions: { parse: [] } })
 });

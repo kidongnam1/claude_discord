@@ -15,9 +15,8 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-# MSYS /d/... → D:/... conversion for node compatibility
-PROJECT_ROOT_WIN=$(echo "$PROJECT_ROOT" | sed 's|^/\([a-z]\)/|\U\1:/|' | tr '/' '/')
-HARNESS_DIR="$PROJECT_ROOT_WIN/.harness-state"
+# HARNESS_DIR 환경변수가 있으면 우선 사용 (테스트용 오버라이드)
+HARNESS_DIR="${HARNESS_DIR:-$PROJECT_ROOT/.harness-state}"
 mkdir -p "$HARNESS_DIR"
 
 get_state_file() {
@@ -132,7 +131,7 @@ st.updated_at = new Date().toISOString();
 fs.writeFileSync(p, JSON.stringify(st, null, 2));
 console.log('[INFO] retry: ' + st.retry_count + '/' + st.max_retries);
 if (st.retry_count >= st.max_retries) {
-  console.log('[WARN] max retries reached — user notification needed');
+  console.error('[WARN] max retries reached — user notification needed');
   process.exit(2);
 }
 " "$state_file"
@@ -183,13 +182,13 @@ list_all() {
 }
 
 case "${1:-}" in
-    init) init_state "$2" "$3" ;;
-    stage) set_stage "$2" "$3" ;;
-    approve) approve_gate "$2" "$3" ;;
-    reject) reject_gate "$2" "$3" "${4:-no reason}" ;;
-    retry) increment_retry "$2" ;;
-    scale) set_scale "$2" "$3" ;;
-    get) get_state "$2" ;;
+    init) init_state "${2:-}" "${3:-}" ;;
+    stage) set_stage "${2:-}" "${3:-}" ;;
+    approve) approve_gate "${2:-}" "${3:-}" ;;
+    reject) reject_gate "${2:-}" "${3:-}" "${4:-no reason}" ;;
+    retry) increment_retry "${2:-}" ;;
+    scale) set_scale "${2:-}" "${3:-}" ;;
+    get) get_state "${2:-}" ;;
     list) list_all ;;
     *) echo "Usage: harness-status.sh <init|stage|approve|reject|retry|scale|get|list> ..." >&2; exit 1 ;;
 esac
