@@ -101,7 +101,7 @@ async function discordRequest(token, method, endpoint, body) {
     headers: {
       Authorization: `Bot ${token}`,
       "Content-Type": "application/json",
-      "User-Agent": "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.1.0)"
+      "User-Agent": "DiscordBot (https://github.com/kidongnam1/claude_discord, 1.2.0)"
     },
     body: body === undefined ? undefined : JSON.stringify(body)
   });
@@ -146,7 +146,7 @@ function safeMessage(message) {
 export function createServer(config = loadConfig()) {
   const server = new McpServer({
     name: "gy-discord",
-    version: "1.1.0"
+    version: "1.2.0"
   });
 
   server.registerTool(
