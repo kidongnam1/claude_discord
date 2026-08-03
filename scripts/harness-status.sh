@@ -15,8 +15,16 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+# MSYS /d/... → D:\... 변환 (node fs 호환)
+to_windows_path() {
+    local p="$1"
+    # /d/program/... → D:\program\...
+    p=$(echo "$p" | sed 's|^/\([a-zA-Z]\)/|\U\1:/|' | tr '/' '\\')
+    echo "$p"
+}
+PROJECT_ROOT_WIN=$(to_windows_path "$PROJECT_ROOT")
 # HARNESS_DIR 환경변수가 있으면 우선 사용 (테스트용 오버라이드)
-HARNESS_DIR="${HARNESS_DIR:-$PROJECT_ROOT/.harness-state}"
+HARNESS_DIR="${HARNESS_DIR:-$PROJECT_ROOT_WIN/.harness-state}"
 mkdir -p "$HARNESS_DIR"
 
 get_state_file() {
