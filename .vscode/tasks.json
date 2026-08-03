@@ -1,0 +1,78 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "GY Router: 최초 설정",
+      "type": "shell",
+      "command": "& '${workspaceFolder}\\scripts\\setup-router.ps1'",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "router-setup",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GY Router: 설정 검사",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "router/discord-ai-router.mjs",
+        "--check"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "router-check",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GY Router: 실행",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "router/discord-ai-router.mjs"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "group": "router-running",
+        "clear": false,
+        "showReuseMessage": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "GY Router: 전체 테스트",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "router-test",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

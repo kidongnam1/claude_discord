@@ -108,6 +108,19 @@ Windows 로그인 시 자동 시작 등록은 실제 Discord 실행 검증 후 �
 
 Hermes는 원샷 모드 자체가 내부 승인 질문을 건너뛰므로, 읽기 모드에서는 로컬 파일·터미널 도구를 제공하지 않습니다. Hermes가 실제 저장소 파일을 읽거나 수정해야 하는 요청은 `mode:write`와 `/approve`를 사용합니다.
 
+### VS Code 작업 영역
+
+`GY-Discord-Router.code-workspace`를 열면 프로젝트 루트와 PowerShell 터미널이 기본으로 설정됩니다.
+
+VS Code에서 `터미널 → 작업 실행`을 선택한 뒤 다음 작업을 사용할 수 있습니다.
+
+- `GY Router: 최초 설정`
+- `GY Router: 설정 검사`
+- `GY Router: 실행` — 라우터 전용 터미널 사용
+- `GY Router: 전체 테스트`
+
+Discord 실전 연결이 성공하기 전에는 라우터 자동 시작 작업을 등록하지 않습니다.
+
 ## Codex Discord MCP
 
 의존성을 설치합니다.
