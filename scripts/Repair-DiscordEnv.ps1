@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$EnvFile = (Join-Path (Split-Path $PSScriptRoot -Parent) ".env")
 )

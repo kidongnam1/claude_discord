@@ -1,4 +1,4 @@
-# update-discord-hosts.ps1 — Discord 도메인 hosts 파일 자동 업데이트
+﻿# update-discord-hosts.ps1 — Discord 도메인 hosts 파일 자동 업데이트
 #
 # 사용법: 관리자 PowerShell에서 실행
 #   .\update-discord-hosts.ps1

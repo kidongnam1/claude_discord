@@ -1,4 +1,4 @@
-# setup-gwangyang-discord.ps1 — 광양 PC에서 Discord 오케스트레이터 설정
+﻿# setup-gwangyang-discord.ps1 — 광양 PC에서 Discord 오케스트레이터 설정
 #
 # 사용법: 관리자 PowerShell에서 실행
 #   Set-ExecutionPolicy Bypass -Scope Process

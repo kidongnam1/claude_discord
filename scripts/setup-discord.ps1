@@ -1,4 +1,4 @@
-# setup-discord.ps1 — Discord Multi-Agent 설정 마법사
+﻿# setup-discord.ps1 — Discord Multi-Agent 설정 마법사
 #
 # 사용법: .\scripts\setup-discord.ps1
 #

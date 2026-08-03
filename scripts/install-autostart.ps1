@@ -1,4 +1,4 @@
-# install-autostart.ps1 — Windows 로그인 시 오케스트레이터를 자동 기동한다.
+﻿# install-autostart.ps1 — Windows 로그인 시 오케스트레이터를 자동 기동한다.
 # 사용법: .\scripts\install-autostart.ps1
 # 시작 프로그램 폴더에 바로가기를 생성한다 (관리자 권한 불필요).
 
