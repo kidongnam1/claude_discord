@@ -365,9 +365,8 @@ def api_daily_report():
 
 
 def api_harness_status():
-    """./scripts/harness-status.sh list 실행 (상대경로 — cwd=BASE_DIR)."""
+    """./scripts/harness-status.sh list 실행 후 JSON 구조화하여 반환."""
     try:
-        # git-bash 가 Windows 절대경로를 인식하지 못하므로 상대경로 사용
         cmd = ["bash", "scripts/harness-status.sh", "list"]
         result = subprocess.run(
             cmd,
@@ -378,14 +377,28 @@ def api_harness_status():
             errors="replace",
             cwd=BASE_DIR,
         )
+        stdout = result.stdout or ""
+        tasks = []
+        blocks = stdout.split("---")
+        for block in blocks:
+            block = block.strip()
+            if not block:
+                continue
+            try:
+                task = json.loads(block)
+                tasks.append(task)
+            except json.JSONDecodeError:
+                continue
         return {
             "ok": result.returncode == 0,
-            "stdout": result.stdout or "",
+            "tasks": tasks,
+            "count": len(tasks),
+            "raw": stdout,
             "stderr": result.stderr or "",
             "code": result.returncode,
         }
     except Exception as e:
-        return {"ok": False, "stdout": "", "stderr": str(e), "code": -1}
+        return {"ok": False, "tasks": [], "count": 0, "raw": "", "stderr": str(e), "code": -1}
 
 
 def api_send_discord_message(channel_type, message):
@@ -924,10 +937,15 @@ async function runCmd(url, btn) {
         out.classList.add('show');
         out.classList.remove('error');
         let txt = '';
-        if (r.stdout) txt += r.stdout;
-        if (r.stderr) txt += (txt ? '\n' : '') + r.stderr;
-        if (!txt) txt = (r.ok ? '✅ 완료' : '❌ 실패') + ' (exit ' + r.code + ')';
-        else txt += '\n--- [exit ' + r.code + '] ' + (r.ok ? '성공' : '실패') + ' ---';
+        if (url.includes('harness_status') && r.tasks) {
+            txt = renderHarnessDashboard(r);
+        } else {
+            if (r.stdout) txt += r.stdout;
+            if (r.raw) txt += r.raw;
+            if (r.stderr) txt += (txt ? '\n' : '') + r.stderr;
+            if (!txt) txt = (r.ok ? '✅ 완료' : '❌ 실패') + ' (exit ' + r.code + ')';
+            else txt += '\n--- [exit ' + r.code + '] ' + (r.ok ? '성공' : '실패') + ' ---';
+        }
         out.textContent = txt;
     } catch (e) {
         out.classList.add('show', 'error');
@@ -937,6 +955,30 @@ async function runCmd(url, btn) {
         btn.innerHTML = origText;
         updateStatus();
     }
+}
+
+function renderHarnessDashboard(r) {
+    if (!r.tasks || r.tasks.length === 0) {
+        return '🧩 하네스 작업 없음 (0개)';
+    }
+    const stageEmoji = { plan: '📋', build: '🔨', review: '🔍', verify: '✅', complete: '🏁' };
+    const scaleEmoji = { small: 'S', medium: 'M', large: 'L' };
+    let lines = ['🧩 하네스 작업 ' + r.count + '개', ''];
+    for (const t of r.tasks) {
+        let stage = t.stage || '?';
+        let emoji = stageEmoji[stage] || '❓';
+        let scale = scaleEmoji[t.scale] || '?';
+        let g1 = t.g1_approved ? '✅' : '⬜';
+        let g4 = t.g4_completed ? '✅' : '⬜';
+        let retry = t.retry_count || 0;
+        let retryWarn = retry >= (t.max_retries || 3) ? ' ⚠️MAX' : (retry > 0 ? ' ↻' + retry : '');
+        lines.push(emoji + ' [' + scale + '] ' + (t.task_name || t.thread_id || '?'));
+        lines.push('   단계: ' + stage + ' | G1:' + g1 + ' G4:' + g4 + retryWarn);
+        lines.push('   thread: ' + (t.thread_id || '?'));
+        lines.push('');
+    }
+    lines.push('--- [exit ' + r.code + '] ' + (r.ok ? '성공' : '실패') + ' ---');
+    return lines.join('\n');
 }
 
 // ------------------------------------------------------------------

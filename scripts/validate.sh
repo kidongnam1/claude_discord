@@ -15,6 +15,12 @@ test -x scripts/post-as.sh
 test -x scripts/validate.sh
 test -f scripts/Test-DiscordConnection.ps1
 test -f mcp/discord-mcp.mjs
+test -f router/discord-ai-router.mjs
+test -f router/router-core.mjs
+test -f router/job-store.mjs
+test -f scripts/Start-DiscordAiRouter.ps1
+test -f scripts/install-router-autostart.ps1
+test -f scripts/setup-router.ps1
 
 VERSION_VALUE=$(tr -d '\r\n' < VERSION)
 if [[ ! "$VERSION_VALUE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -30,6 +36,7 @@ fi
 grep -qxF '.env' <(tr -d '\r' < .gitignore)
 grep -qxF '.env.test' <(tr -d '\r' < .gitignore)
 grep -qxF '.discord-state/' <(tr -d '\r' < .gitignore)
+grep -qxF '.discord-router/' <(tr -d '\r' < .gitignore)
 
 if grep -Eq '^[A-Z_]+=[[:space:]]+[^#[:space:]]' .env.example; then
     echo "[ERROR] .env.example 값 앞에 공백이 있습니다." >&2

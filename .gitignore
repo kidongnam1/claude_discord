@@ -1,6 +1,7 @@
 .env
 .env.test
 .discord-state/
+.discord-router/
 .harness-state/
 .bkit/audit/
 .bkit/runtime/

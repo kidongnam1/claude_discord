@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "name": "GY Discord Router",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.encoding": "utf8",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.enablePersistentSessions": true,
+    "window.restoreWindows": "one"
+  }
+}

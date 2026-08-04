@@ -1,4 +1,4 @@
-# fix-dns-gwangyang.ps1 — 광양PC DNS 하이재킹 점검 및 수정 스크립트
+﻿# fix-dns-gwangyang.ps1 — 광양PC DNS 하이재킹 점검 및 수정 스크립트
 #
 # 사용법: 관리자 PowerShell에서 실행
 #   Set-ExecutionPolicy Bypass -Scope Process

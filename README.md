@@ -16,6 +16,8 @@ Claude Code를 Discord의 오케스트레이터로 사용하고, Claude·Codex·
 - 실제 Discord 요청 없이 확인할 수 있는 `DRY_RUN` 모드
 - Codex에서 채널 확인·최근 메시지 조회·역할별 전송을 제공하는 로컬 Discord MCP
 - Windows PowerShell 연결 및 실전송 검사
+- 하나의 전용 Discord 봇에서 Codex·Antigravity·Hermes CLI 작업 실행
+- 읽기 작업 자동 실행, 쓰기 작업 `/approve` 승인, `/stop` 중지, 상태 영구 저장
 
 ## 요구 사항
 
@@ -25,6 +27,7 @@ Claude Code를 Discord의 오케스트레이터로 사용하고, Claude·Codex·
 - `tmux`
 - Claude Code와 Discord 채널 플러그인
 - Discord 봇 4개와 각 봇 토큰
+- AI 라우터를 사용할 경우 별도의 `GY-AI-Router` Discord 봇 1개
 
 ## 설치
 
@@ -55,6 +58,68 @@ Windows 시스템 환경변수에 직접 설정해도 동작합니다 (환경변
 값은 반드시 `KEY=값`처럼 등호 바로 뒤에 입력합니다. `KEY=    값`처럼 공백을 넣으면 Bash가 값을 명령으로 오인할 수 있습니다.
 별도 오케스트레이터 봇을 사용하지 않는 경우 `ORCH_BOT_TOKEN`은 비워둘 수 있으며, 스레드 생성에는 Claude 봇 토큰이 사용됩니다.
 REST 스크립트와 MCP는 `.env`를 셸 코드로 실행하지 않고 허용된 설정 이름만 데이터로 읽습니다.
+
+## Codex·Antigravity·Hermes Discord 라우터
+
+기존 Claude Discord 연결은 그대로 유지합니다. 별도의 `GY-AI-Router` 봇 하나가 다음 슬래시 명령을 담당합니다.
+
+- `/codex`, `/agy`, `/hermes`: AI 선택 및 작업 요청
+- `mode:read`: 바로 실행. Codex는 read-only, Antigravity는 plan, Hermes는 로컬 도구 차단
+- `mode:write`: `pending_approval`로 저장한 뒤 `/approve job:작업ID`가 있어야 실행
+- `/status`: 최근 작업 또는 지정 작업 상태 확인
+- `/stop`: 실행 중인 프로세스와 자식 프로세스 중지
+
+작업 상태와 로그는 Git에서 제외된 `.discord-router/`에 저장되므로 프로그램 재시작 후에도 남습니다. 저장소는 `ROUTER_ALLOWED_REPOS`에 정확히 등록된 루트만 허용합니다.
+
+### 1. Discord 봇 준비
+
+Discord Developer Portal에서 새 애플리케이션과 봇을 만들고 서버에 초대합니다. 권한은 `View Channels`, `Send Messages`, `Use Application Commands`만 부여합니다. 기존 Claude/워커 봇 토큰은 재사용하지 않습니다.
+
+### 2. 라우터 설정
+
+```powershell
+.\scripts\setup-router.ps1
+```
+
+토큰은 보안 입력으로 받고 화면에 표시하지 않습니다. 직접 설정할 경우 다음 값을 `.env`에 추가합니다.
+
+```dotenv
+ROUTER_BOT_TOKEN=
+ROUTER_GUILD_ID=
+ROUTER_ALLOWED_USER_IDS=
+ROUTER_ALLOWED_CHANNEL_IDS=
+ROUTER_ALLOWED_REPOS=D:\program\claude_discord,D:\program\SQM_inventory
+ROUTER_DEFAULT_REPO=D:\program\claude_discord
+ROUTER_TIMEOUT_MINUTES=30
+```
+
+설정 검사와 실행:
+
+```powershell
+npm run router:check
+npm run router:start
+```
+
+Windows 로그인 시 자동 시작 등록은 실제 Discord 실행 검증 후 진행합니다.
+
+```powershell
+.\scripts\install-router-autostart.ps1
+```
+
+Hermes는 원샷 모드 자체가 내부 승인 질문을 건너뛰므로, 읽기 모드에서는 로컬 파일·터미널 도구를 제공하지 않습니다. Hermes가 실제 저장소 파일을 읽거나 수정해야 하는 요청은 `mode:write`와 `/approve`를 사용합니다.
+
+### VS Code 작업 영역
+
+`GY-Discord-Router.code-workspace`를 열면 프로젝트 루트와 PowerShell 터미널이 기본으로 설정됩니다.
+
+VS Code에서 `터미널 → 작업 실행`을 선택한 뒤 다음 작업을 사용할 수 있습니다.
+
+- `GY Router: 최초 설정`
+- `GY Router: 설정 검사`
+- `GY Router: 실행` — 라우터 전용 터미널 사용
+- `GY Router: 전체 테스트`
+
+Discord 실전 연결이 성공하기 전에는 라우터 자동 시작 작업을 등록하지 않습니다.
 
 ## Codex Discord MCP
 

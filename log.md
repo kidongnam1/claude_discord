@@ -182,4 +182,11 @@
 - [VERIFICATION] npm test 5/5 pass — MCP 8개 도구 정상
 - [DECISION] .gitignore에 .harness-state/ 추가
 - [COMPLETE] 하네스 워크플로우 구현 1차 완료 — CLAUDE.md + 템플릿 + 상태관리 + MCP 도구 (2026-08-01)
+- [PLAN] harness-final 작업 착수 — harness-status.sh MSYS 경로 변환 버그 수정 + 테스트 단순화 + web.py 자동기동 (2026-08-02)
+- [BUILD] harness-status.sh to_windows_path() 추가 + HARNESS_DIR 환경변수 오버라이드 + case문 ${2:-} 패턴 적용
+- [BUILD] tests/harness-status.test.mjs — WSL toWslPath() 제거, process.cwd() + env 직접 전달로 단순화, 7개 테스트 추가
+- [BUILD] Start-DiscordOrchestrator.ps1 — orchestrator_web.py 백그라운드 기동 + 포트 8865 중복 가드 추가
+- [REVIEW] npm test 21/21 pass — 기존 14 + 신규 7. 품질 평가 9/10 (경로 변환 근본 해결, 단순화 향상)
+- [VERIFY] 검증 체크리스트 4/4 pass — npm test, 실사용 경로, 테스트 격리, web.py 자동기동 로직
+- [COMPLETE] 하네스 4단계 실전 첫 완결 — commit 2e6de1d, harness-final stage=complete g4_completed=true (2026-08-02)
 
