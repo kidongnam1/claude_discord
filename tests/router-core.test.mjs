@@ -47,7 +47,7 @@ test("Antigravity는 plan과 accept-edits를 분리한다", () => {
 
 test("Hermes 읽기 모드는 로컬 변경 도구를 제공하지 않는다", () => {
   const read = buildInvocation({ agent: "hermes", mode: "read", prompt: "분석", repo: process.cwd() });
-  assert.deepEqual(read.args.slice(0, 3), ["--safe-mode", "-t", "web,vision"]);
+  assert.deepEqual(read.args.slice(0, 3), ["-t", "web,vision", "-z"]);
   assert.equal(read.args.includes("--yolo"), false);
 });
 
