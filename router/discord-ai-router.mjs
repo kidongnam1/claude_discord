@@ -196,12 +196,16 @@ export async function startRouter(config = loadRouterConfig()) {
 
     let stdout = "";
     let stderr = "";
-    const child = spawn(invocation.command, invocation.args, {
-      cwd: invocation.cwd,
-      env: { ...process.env, NO_COLOR: "1" },
-      windowsHide: true,
-      shell: false,
-      stdio: ["ignore", "pipe", "pipe"]
+    const childEnv = { ...process.env, NO_COLOR: "1" };
+        if (process.platform === "win32" && !childEnv.HERMES_HOME) {
+          childEnv.HERMES_HOME = path.join(process.env.LOCALAPPDATA || "", "hermes");
+        }
+        const child = spawn(invocation.command, invocation.args, {
+          cwd: invocation.cwd,
+          env: childEnv,
+          windowsHide: true,
+          shell: false,
+          stdio: ["ignore", "pipe", "pipe"]
     });
     active.set(job.id, child);
     const timeout = setTimeout(() => terminateProcess(child), config.timeoutMs);

@@ -136,7 +136,7 @@ export function buildInvocation({ agent, mode, prompt, repo, commands = {} }) {
   return {
     command: commands.hermes || defaultHermes,
     args: mode === "read"
-      ? ["--safe-mode", "-t", "web,vision", "-z", hermesReadPrompt]
+      ? ["-t", "web,vision", "-z", hermesReadPrompt]
       : ["-z", hermesWritePrompt],
     cwd: repo
   };
